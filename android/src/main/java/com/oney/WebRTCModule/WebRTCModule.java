@@ -6,6 +6,7 @@ import android.util.SparseArray;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -38,6 +39,7 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
      * The implementation of {@code getUserMedia} extracted into a separate file
      * in order to reduce complexity and to (somewhat) separate concerns.
      */
+    private GetDisplayMediaImpl getDisplayMediaImpl;
     private GetUserMediaImpl getUserMediaImpl;
 
     public static class Options {
@@ -121,6 +123,7 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
                 .setVideoDecoderFactory(decoderFactory)
                 .createPeerConnectionFactory();
 
+        getDisplayMediaImpl = new GetDisplayMediaImpl(this, reactContext);
         getUserMediaImpl = new GetUserMediaImpl(this, reactContext);
     }
 
@@ -475,6 +478,10 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
         }
 
         return mediaConstraints;
+    }
+
+    public void getDisplayMedia(Promise promise) {
+        ThreadUtils.runOnExecutor(() -> getDisplayMediaImpl.getDisplayMedia(promise));
     }
 
     @ReactMethod
