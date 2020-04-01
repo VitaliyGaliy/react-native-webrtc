@@ -21,11 +21,19 @@ export default function getDisplayMedia(constraints) {
     WebRTCModule.getDisplayMedia().then(
       data => {
         const { streamId, track } = data;
-        const stream = new MediaStream(streamId);
+        // const stream = new MediaStream(streamId);
 
-        stream.addTrack(new MediaStreamTrack(track));
+        // stream.addTrack(new MediaStreamTrack(track));
 
-        resolve(stream);
+        // resolve(stream);
+
+        const info = {
+          streamId,
+          streamReactTag: streamId,
+          track: [track]
+        };
+
+        resolve(new MediaStream(info));
       },
       error => {
         reject(new MediaStreamError(error));

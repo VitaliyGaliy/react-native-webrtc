@@ -479,7 +479,7 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
 
         return mediaConstraints;
     }
-
+ @ReactMethod
     public void getDisplayMedia(Promise promise) {
         ThreadUtils.runOnExecutor(() -> getDisplayMediaImpl.getDisplayMedia(promise));
     }

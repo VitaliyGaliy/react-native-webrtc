@@ -16,9 +16,11 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableMap;
 
+import org.webrtc.EglBase;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.ScreenCapturerAndroid;
+import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
@@ -40,6 +42,7 @@ class GetDisplayMediaImpl {
      * The {@link Log} tag with which {@code GetDisplayMediaImpl} is to log.
      */
     private static final String TAG = WebRTCModule.TAG;
+    private static final String MYTAG = "myLogs";
 
     private final ReactApplicationContext reactContext;
     private final WebRTCModule webRTCModule;
@@ -52,6 +55,8 @@ class GetDisplayMediaImpl {
         this.webRTCModule = webRTCModule;
         this.reactContext = reactContext;
 
+        Log.d(MYTAG, "Hello GetDisplayMediaImpl");
+
         this.activityEventListener = new BaseActivityEventListener() {
             @Override
             public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
@@ -62,7 +67,7 @@ class GetDisplayMediaImpl {
                         promise = null;
                         return;
                     }
-
+                    Log.d(MYTAG, "Hello activityEventListener");
                     mediaProjectionPermissionResultData = data;
                     createStream();
                 }
@@ -73,6 +78,7 @@ class GetDisplayMediaImpl {
     }
 
     public void getDisplayMedia(Promise promise) {
+
         if (this.promise != null) {
             promise.reject(new RuntimeException("Another operation is pending."));
             return;
@@ -91,14 +97,18 @@ class GetDisplayMediaImpl {
                 Context.MEDIA_PROJECTION_SERVICE);
         currentActivity.startActivityForResult(
             mediaProjectionManager.createScreenCaptureIntent(), PERMISSION_REQUEST_CODE);
+        Log.d(MYTAG, "Hello getDisplayMedia!!!");
     }
 
     private void createStream() {
+
         String streamId = UUID.randomUUID().toString();
+        Log.d(MYTAG, "Hello createStream =" + streamId);
         MediaStream mediaStream = webRTCModule.mFactory.createLocalMediaStream(streamId);
         VideoTrack track = createTrack();
-        mediaStream.addTrack(track);
 
+        mediaStream.addTrack(track);
+        Log.d(MYTAG, "createStream track: "+ track);
         WritableMap data = Arguments.createMap();
         data.putString("streamId", streamId);
 
@@ -113,7 +123,7 @@ class GetDisplayMediaImpl {
         trackInfo.putBoolean("remote", false);
 
         data.putMap("track", trackInfo);
-
+        Log.d(MYTAG, "Hello trackInfo =" + data);
         webRTCModule.localStreams.put(streamId, mediaStream);
         promise.resolve(data);
 
@@ -123,6 +133,7 @@ class GetDisplayMediaImpl {
     }
 
     private VideoTrack createTrack() {
+
         VideoCapturer capturer
             = new ScreenCapturerAndroid(mediaProjectionPermissionResultData, new MediaProjection.Callback() {
                 @Override
@@ -133,17 +144,29 @@ class GetDisplayMediaImpl {
 
         PeerConnectionFactory pcFactory = webRTCModule.mFactory;
 
-        VideoSource source = pcFactory.createVideoSource(capturer);
+        EglBase.Context eglContext = EglUtils.getRootEglBaseContext();
+        SurfaceTextureHelper surfaceTextureHelper =
+                SurfaceTextureHelper.create("CaptureThread", eglContext);
+
+        VideoSource source = pcFactory.createVideoSource(capturer.isScreencast());
+        capturer.initialize(surfaceTextureHelper, reactContext,  source.getCapturerObserver());
+
         String id = UUID.randomUUID().toString();
 
         VideoTrack track = pcFactory.createVideoTrack(id, source);
+
         track.setEnabled(true);
 
         DisplayMetrics displayMetrics = getDisplayMetrics();
+
         int width = displayMetrics.widthPixels;
         int height = displayMetrics.heightPixels;
         int fps = 30;
+
         capturer.startCapture(width, height, fps);
+//        Log.d(MYTAG, "capturer.isScreencast(): "+ capturer.isScreencast());
+//        Log.d(MYTAG, "ScreenCapturerAndroid.pcFactory: "+ pcFactory);
+//        Log.d(MYTAG, "ScreenCapturerAndroid.source: "+ source);
 
         return track;
     }
