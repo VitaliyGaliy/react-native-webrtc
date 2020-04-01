@@ -1,6 +1,6 @@
 package com.oney.WebRTCModule;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -479,10 +479,6 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
 
         return mediaConstraints;
     }
- @ReactMethod
-    public void getDisplayMedia(Promise promise) {
-        ThreadUtils.runOnExecutor(() -> getDisplayMediaImpl.getDisplayMedia(promise));
-    }
 
     @ReactMethod
     public void getUserMedia(ReadableMap constraints,
@@ -490,6 +486,11 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
                              Callback    errorCallback) {
         ThreadUtils.runOnExecutor(() ->
             getUserMediaImpl.getUserMedia(constraints, successCallback, errorCallback));
+    }
+
+    @ReactMethod
+    public void getDisplayMedia(Promise promise) {
+        ThreadUtils.runOnExecutor(() -> getDisplayMediaImpl.getDisplayMedia(promise));
     }
 
     @ReactMethod

@@ -30,7 +30,7 @@ export default function getDisplayMedia(constraints) {
         const info = {
           streamId,
           streamReactTag: streamId,
-          track: [track]
+          tracks: [track]
         };
 
         resolve(new MediaStream(info));
